@@ -1,0 +1,38 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
+
+group 'com.mobiquity'
+version '1.0-SNAPSHOT'
+
+ext {
+    lombok_version = '1.18.20'
+    slf4_version = '1.7.28'
+    junit_version = '4.13.2'
+}
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    testCompile "junit:junit:$junit_version"
+    compileOnly "org.projectlombok:lombok:$lombok_version"
+    annotationProcessor "org.projectlombok:lombok:$lombok_version"
+    compile "org.slf4j:slf4j-api:$slf4_version"
+}
+
+publishing {
+    publications {
+        publishToMavenLocal(MavenPublication) {
+            group('com.mobiquity')
+            artifactId('packer')
+            version '1'
+            from components.java
+        }
+    }
+}
