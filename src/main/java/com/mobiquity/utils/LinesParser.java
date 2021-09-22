@@ -21,7 +21,7 @@ public class LinesParser {
      * Parses each line of file with package information
      *
      * @param linesToParse lines of file
-     * @return list of packages from lines
+     * @return List of packages from lines
      * @throws APIException
      */
     public static List<Package> parseLines(List<String> linesToParse) throws APIException {

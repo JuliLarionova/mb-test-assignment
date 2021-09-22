@@ -8,8 +8,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * The class contains a static method which is used
+ * to find the best options that should be packed
+ */
 public class BestPackageOptionsUtils {
 
+    /**
+     * @param pack {@link com.mobiquity.packer.model.Package} Information about package
+     *             which includes maxWeight and possible items in it
+     * @return The best options of items which should be packed
+     */
     public static String suitableItemIndexes(Package pack) {
         val maxWeight = pack.getMaxWeight();
         val packageItems = pack.getPackageItems();
@@ -19,16 +28,16 @@ public class BestPackageOptionsUtils {
         List<List<Package.Item>> itemsCombination = findAllPossibleItemsCombinations(itemsWithSuitableWeight, maxWeight);
 
         return findCombinationToPack(itemsCombination).stream()
-                .map(c->c.getIndex().toString())
+                .map(c -> c.getIndex().toString())
                 .collect(Collectors.joining(","));
     }
 
     private static List<Package.Item> findCombinationToPack(List<List<Package.Item>> itemsCombination) {
         List<Package.Item> bestItemsToPack = new ArrayList<>();
         double bestWeight = 0.0;
-        double bestCost =  0.0;
+        double bestCost = 0.0;
 
-        for (List<Package.Item> comb: itemsCombination) {
+        for (List<Package.Item> comb : itemsCombination) {
             double sumCostOfCombination = comb.stream().mapToDouble(Package.Item::getCost).sum();
             double sumWeightOfCombination = comb.stream().mapToDouble(Package.Item::getWeight).sum();
             if (bestCost < sumCostOfCombination) {
