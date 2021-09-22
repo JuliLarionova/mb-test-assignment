@@ -18,12 +18,12 @@ public class Config {
     private static Double maxItemWeight;
     private static Integer maxItemCost;
 
-    public static void init(final String parametersFile) {
+    public static void init(final String configFile) {
         final Properties properties = new Properties();
         try {
-            properties.load(Objects.requireNonNull(Config.class.getClassLoader().getResourceAsStream(parametersFile)));
+            properties.load(Objects.requireNonNull(Config.class.getClassLoader().getResourceAsStream(configFile)));
         } catch (IOException e) {
-            log.debug("Error occurred while reading parameters file: " + parametersFile + " Error details are: " + e.getMessage());
+            log.debug("Error occurred while reading config file: " + e.getMessage());
         }
 
         maxPackageWeight = Double.parseDouble(properties.getProperty("max.package.weight"));

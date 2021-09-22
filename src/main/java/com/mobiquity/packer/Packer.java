@@ -37,13 +37,4 @@ public class Packer {
                 .map(BestPackageOptionsUtils::suitableItemIndexes)
                 .collect(Collectors.joining("\n"));
     }
-
-    public static void main(String[] args) throws IOException {
-        try {
-            String pack = pack("C:\\Users\\Julia\\Desktop\\docs\\test1.txt");
-            System.out.printf(pack);
-        } catch (APIException e) {
-            e.printStackTrace();
-        }
-    }
 }

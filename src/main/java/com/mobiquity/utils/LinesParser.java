@@ -6,18 +6,16 @@ import com.mobiquity.packer.model.Package.Item;
 import com.mobiquity.utils.config.Config;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public class LinesParser {
-    private static Config properties = new Config();
     private static final String COLON_DELIMITER = ":";
+    private static final String COMMA_DELIMITER = ",";
 
     /**
      * Parses each line of file with package information
@@ -47,24 +45,28 @@ public class LinesParser {
             throw new APIException("There is no max weight in a line: " + lineToParse);
         }
 
-        Integer lineLength = lineToParse.length();
+        int lineLength = lineToParse.length();
         String packageItems = lineToParse.substring(indexOfColon + 1, lineLength);
         Double maxWeight = Double
                 .parseDouble(lineToParse.substring(0, indexOfColon).trim());
-        Package parsedLine = Package.builder()
-                .maxWeight(maxWeight)
-                .packageItems(parsePackageItems(packageItems))
-                .build();
 
-        return parsedLine;
+        return Package.builder()
+                .maxWeight(maxWeight)
+                .packageItems(parsePackageItemsWithRegex(packageItems))
+                .build();
     }
 
-    private static List<Item> parsePackageItems(String packageItems) {
+    /**
+     * The first option how to parse string with data in parentheses using regex
+     *
+     * @param packageItemsString tring with unparsed items in line
+     * @return list of items in line
+     */
+    private static List<Item> parsePackageItemsWithRegex(String packageItemsString) {
         final Pattern p = Pattern.compile("(\\d+)\\,(\\d+\\.?\\d*)\\,(\\D\\d+)");
-        final Matcher m = p.matcher(packageItems);
+        final Matcher m = p.matcher(packageItemsString);
 
         List<Item> items = new LinkedList<>();
-
         while (m.find()) {
             Item item = Item.builder()
                     .index(Integer.valueOf(m.group(1)))
@@ -73,25 +75,42 @@ public class LinesParser {
                     .build();
             items.add(item);
         }
+
         return items;
     }
 
+    /**
+     * The second option how to parse string with data in parentheses
+     *
+     * @param packageItemsString string with unparsed items in line
+     * @return list of items in line
+     */
+    private static List<Item> parsePackageItemsWithoutRegex(String packageItemsString) {
+        return Arrays.stream(packageItemsString.split("[()]"))
+                .filter(c -> !c.equals(" "))
+                .map(c -> {
+                    String[] splittedItem = c.split(COMMA_DELIMITER);
+                    return Item.builder()
+                            .index(Integer.valueOf(splittedItem[0]))
+                            .weight(Double.valueOf(splittedItem[1]))
+                            .cost(Integer.valueOf(splittedItem[2].substring(1)))
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
     private static void validatePackageInfo(Package packageInfo) throws APIException {
-        if (packageInfo.getMaxWeight().compareTo(Config.getMaxPackageWeight())>0) {
+        if (packageInfo.getMaxWeight().compareTo(Config.getMaxPackageWeight()) > 0) {
             throw new APIException("Package weight is greater than max allowed weight");
         }
 
         Predicate<Item> condition = c -> c.getIndex() > Config.getMaxItemsNumber()
                 || c.getWeight().compareTo(Config.getMaxItemWeight()) > 0 || c.getCost() > Config.getMaxItemCost();
-        checkPackageItemByCondition(packageInfo.getPackageItems(), condition, "Package item does not meet the requirement");
-    }
-
-    private static void checkPackageItemByCondition(List<Item> packageInfo, Predicate<Item> condition, String errorMsg) throws APIException {
-        Optional<Item> unsatisfiedItemExists = packageInfo.stream()
+        Optional<Item> unsatisfiedItemExists = packageInfo.getPackageItems().stream()
                 .filter(condition)
                 .findAny();
         if (unsatisfiedItemExists.isPresent()) {
-            throw new APIException(errorMsg);
+            throw new APIException("Package item does not meet the requirement");
         }
     }
 }
